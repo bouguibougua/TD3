@@ -1,4 +1,212 @@
+html,
 body {
+
     margin: 0;
+    padding: 0;
+
+    width: 100%;
+    height: 100%;
+
     overflow: hidden;
+
+    font-family: Arial, sans-serif;
+
+    background-color: #000;
+    color: #fff;
+}
+
+
+/* =========================================
+   CANVAS THREE.JS
+========================================= */
+
+canvas {
+
+    display: block;
+
+    position: fixed;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
+
+    z-index: 1;
+}
+
+
+/* =========================================
+   DOM OVERLAY
+========================================= */
+
+#content {
+
+    position: fixed;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
+
+    z-index: 100;
+
+    pointer-events: none;
+}
+
+
+/* =========================================
+   MENU
+========================================= */
+
+.sidenav {
+
+    height: 100%;
+
+    width: 0;
+
+    position: fixed;
+
+    z-index: 500;
+
+    top: 0;
+    left: 0;
+
+    background-color: rgba(17, 17, 17, 0.95);
+
+    overflow-x: hidden;
+
+    transition: 0.4s;
+
+    padding-top: 60px;
+
+    pointer-events: auto;
+}
+
+
+.sidenav a {
+
+    padding: 12px 8px 12px 32px;
+
+    text-decoration: none;
+
+    font-size: 20px;
+
+    color: white;
+
+    display: block;
+
+    transition: 0.3s;
+}
+
+
+.sidenav a:hover {
+
+    color: #aaa;
+}
+
+
+.sidenav .closebtn {
+
+    position: absolute;
+
+    top: 10px;
+    right: 20px;
+
+    font-size: 36px;
+}
+
+
+/* =========================================
+   BOUTON MENU
+========================================= */
+
+#menuButton {
+
+    position: fixed;
+
+    top: 20px;
+    left: 20px;
+
+    z-index: 400;
+
+    font-size: 30px;
+
+    cursor: pointer;
+
+    background-color: rgba(0, 0, 0, 0.65);
+
+    color: white;
+
+    padding: 5px 12px;
+
+    border-radius: 8px;
+
+    pointer-events: auto;
+
+    touch-action: manipulation;
+}
+
+
+/* =========================================
+   CONTENEUR DES BOUTONS AR
+========================================= */
+
+#ar-controls {
+
+    position: fixed;
+
+    bottom: 20px;
+
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    z-index: 400;
+
+    display: flex;
+
+    gap: 10px;
+
+    pointer-events: auto;
+}
+
+
+/* =========================================
+   BOUTONS
+========================================= */
+
+#place-button,
+#delete-button,
+#clear-button {
+
+    width: 90px;
+    height: 40px;
+
+    border: none;
+
+    border-radius: 7px;
+
+    font-size: 14px;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    color: white;
+
+    background-color: rgba(0, 0, 0, 0.8);
+
+    pointer-events: auto;
+
+    touch-action: manipulation;
+}
+
+
+/* PLACE caché tant qu'aucune surface AR
+   n'est détectée */
+
+#place-button {
+
+    display: none;
 }
