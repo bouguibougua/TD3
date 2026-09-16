@@ -396,7 +396,7 @@ function loadModel(model) {
 
     loader.load(
 
-        './models/' +
+        './model/' +
         model +
         '.glb',
 
