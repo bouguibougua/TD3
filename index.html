@@ -3,21 +3,30 @@
 
 <head>
 
-	<title>TD5 - WebXR AR</title>
+    <title>TD5 - WebXR AR</title>
 
-	<meta charset="utf-8">
+    <meta charset="utf-8">
 
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, user-scalable=no"
+    >
 
-	<link type="text/css" rel="stylesheet" href="./main.css">
+    <link
+        type="text/css"
+        rel="stylesheet"
+        href="./main.css"
+    >
 
-	<!-- JQUERY -->
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-	<script>
-		eruda.init();
-	</script>
+    <!-- JQUERY -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
+    <!-- CONSOLE POUR TELEPHONE -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+
+    <script>
+        eruda.init();
+    </script>
 
 </head>
 
@@ -25,98 +34,121 @@
 <body>
 
 
-	<div id="content">
+<div id="content">
 
 
-		<!-- MENU LATERAL -->
-		<div id="mySidenav" class="sidenav">
+    <!-- MENU LATERAL -->
+    <div id="mySidenav" class="sidenav">
 
-			<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">
-				&times;
-			</a>
+        <a
+            href="javascript:void(0)"
+            class="closebtn"
+            onclick="closeNav()"
+        >
+            &times;
+        </a>
 
-			<a class="ar-object" id="1" href="#">Chaise 1</a>
+        <a class="ar-object" id="1" href="#">
+            Chaise 1
+        </a>
 
-			<a class="ar-object" id="2" href="#">Chaise 2</a>
+        <a class="ar-object" id="2" href="#">
+            Chaise 2
+        </a>
 
-			<a class="ar-object" id="3" href="#">Chaise 3</a>
+        <a class="ar-object" id="3" href="#">
+            Chaise 3
+        </a>
 
-			<a class="ar-object" id="4" href="#">Chaise 4</a>
+        <a class="ar-object" id="4" href="#">
+            Chaise 4
+        </a>
 
-		</div>
-
-
-		<!-- BOUTON MENU -->
-		<div id="menuButton" onclick="openNav()">
-			&#9776;
-		</div>
-
-
-		<!-- BOUTONS AR -->
-		<div id="ar-controls">
-
-			<button type="button" id="place-button">
-				PLACE
-			</button>
-
-			<button type="button" id="delete-button">
-				DELETE
-			</button>
-
-			<button type="button" id="clear-button">
-				CLEAR
-			</button>
-
-		</div>
+    </div>
 
 
-	</div>
+    <!-- BOUTON MENU -->
+    <div
+        id="menuButton"
+        onclick="openNav()"
+    >
+        &#9776;
+    </div>
+
+
+    <!-- BOUTONS AR -->
+    <div id="ar-controls">
+
+        <button
+            type="button"
+            id="place-button"
+        >
+            PLACE
+        </button>
+
+        <button
+            type="button"
+            id="delete-button"
+        >
+            DELETE
+        </button>
+
+        <button
+            type="button"
+            id="clear-button"
+        >
+            CLEAR
+        </button>
+
+    </div>
+
+
+</div>
 
 
 
-	<!-- IMPORT MAP -->
-	<script type="importmap">
-
+<!-- IMPORT MAP -->
+<script type="importmap">
 {
     "imports": {
-
         "three": "./build/three.module.js",
-
         "three/addons/": "./jsm/"
     }
 }
-
 </script>
 
 
 
-	<!-- JAVASCRIPT PRINCIPAL -->
-	<script type="module" src="./main.js">
-	</script>
+<!-- JAVASCRIPT PRINCIPAL -->
+<script
+    type="module"
+    src="./main.js"
+>
+</script>
 
 
 
-	<!-- MENU -->
-	<script>
+<!-- OUVERTURE / FERMETURE MENU -->
+<script>
 
-		function openNav() {
+function openNav() {
 
-			document.getElementById(
-				"mySidenav"
-			).style.width = "250px";
+    document.getElementById(
+        "mySidenav"
+    ).style.width = "250px";
 
-		}
+}
 
 
-		function closeNav() {
+function closeNav() {
 
-			document.getElementById(
-				"mySidenav"
-			).style.width = "0";
+    document.getElementById(
+        "mySidenav"
+    ).style.width = "0";
 
-		}
+}
 
-	</script>
+</script>
 
 
 </body>

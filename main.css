@@ -56,7 +56,7 @@ canvas {
 
 
 /* =========================================
-   MENU
+   MENU LATERAL
 ========================================= */
 
 .sidenav {
@@ -97,6 +97,8 @@ canvas {
     display: block;
 
     transition: 0.3s;
+
+    pointer-events: auto;
 }
 
 
@@ -149,7 +151,7 @@ canvas {
 
 
 /* =========================================
-   CONTENEUR DES BOUTONS AR
+   CONTENEUR DES BOUTONS
 ========================================= */
 
 #ar-controls {
@@ -202,8 +204,8 @@ canvas {
 }
 
 
-/* PLACE caché tant qu'aucune surface AR
-   n'est détectée */
+/* PLACE APPARAIT QUAND UNE SURFACE
+   EST DETECTEE */
 
 #place-button {
 

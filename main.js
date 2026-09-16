@@ -29,20 +29,31 @@ let hitTestSource = null;
 let hitTestSourceRequested = false;
 
 
-/* Objet actuellement prêt à être placé */
+/* OBJET ACTUEL */
 let current_object = null;
 
 
-/* Modèle sélectionné dans le menu */
+/* MODELE SELECTIONNE */
 let selected_model = '1';
 
 
-/* Permet d'éviter les conflits de chargement */
+/* CHARGEMENT */
 let loading_model = null;
 
 
-/* Tous les objets réellement placés */
+/* OBJETS DEJA PLACES */
 let placed_objects = [];
+
+
+/* =========================================
+   VARIABLES ROTATION DU TD
+========================================= */
+
+var touchDown;
+var touchX;
+var touchY;
+var deltaX;
+var deltaY;
 
 
 
@@ -57,17 +68,17 @@ init();
 function init() {
 
 
-    /* -------------------------------------
+    /* =====================================
        SCENE
-    ------------------------------------- */
+    ===================================== */
 
     scene = new THREE.Scene();
 
 
 
-    /* -------------------------------------
+    /* =====================================
        CAMERA
-    ------------------------------------- */
+    ===================================== */
 
     camera = new THREE.PerspectiveCamera(
 
@@ -79,6 +90,7 @@ function init() {
         0.01,
 
         20
+
     );
 
 
@@ -90,32 +102,36 @@ function init() {
 
 
 
-    /* -------------------------------------
+    /* =====================================
        LUMIERES
-    ------------------------------------- */
+    ===================================== */
 
-    const directionalLight =
+    var directionalLight =
         new THREE.DirectionalLight(
-            0xffffff,
-            2
+            0xdddddd,
+            1
         );
 
-    directionalLight.position.set(
-        1,
-        2,
-        1
-    );
+
+    directionalLight.position
+        .set(
+            0,
+            0,
+            1
+        )
+        .normalize();
+
 
     scene.add(
         directionalLight
     );
 
 
-    const ambientLight =
+    var ambientLight =
         new THREE.AmbientLight(
-            0xffffff,
-            1
+            0x222222
         );
+
 
     scene.add(
         ambientLight
@@ -123,9 +139,9 @@ function init() {
 
 
 
-    /* -------------------------------------
+    /* =====================================
        RENDERER
-    ------------------------------------- */
+    ===================================== */
 
     renderer =
         new THREE.WebGLRenderer({
@@ -133,6 +149,7 @@ function init() {
             antialias: true,
 
             alpha: true
+
         });
 
 
@@ -156,9 +173,92 @@ function init() {
 
 
 
-    /* -------------------------------------
+    /* =====================================
+       ROTATION TACTILE
+       CODE DU TD
+    ===================================== */
+
+    renderer.domElement.addEventListener(
+        'touchstart',
+
+        function(e){
+
+            e.preventDefault();
+
+            touchDown = true;
+
+            touchX =
+                e.touches[0].pageX;
+
+            touchY =
+                e.touches[0].pageY;
+
+        },
+
+        false
+    );
+
+
+    renderer.domElement.addEventListener(
+        'touchend',
+
+        function(e){
+
+            e.preventDefault();
+
+            touchDown = false;
+
+        },
+
+        false
+    );
+
+
+    renderer.domElement.addEventListener(
+        'touchmove',
+
+        function(e){
+
+            e.preventDefault();
+
+
+            if(!touchDown){
+
+                return;
+
+            }
+
+
+            deltaX =
+                e.touches[0].pageX -
+                touchX;
+
+
+            deltaY =
+                e.touches[0].pageY -
+                touchY;
+
+
+            touchX =
+                e.touches[0].pageX;
+
+
+            touchY =
+                e.touches[0].pageY;
+
+
+            rotateObject();
+
+        },
+
+        false
+    );
+
+
+
+    /* =====================================
        ORBIT CONTROLS
-    ------------------------------------- */
+    ===================================== */
 
     controls =
         new OrbitControls(
@@ -167,10 +267,15 @@ function init() {
         );
 
 
+    controls.minDistance = 2;
+
+    controls.maxDistance = 10;
+
+
     controls.target.set(
         0,
         0,
-        0
+        -0.2
     );
 
 
@@ -178,13 +283,14 @@ function init() {
 
     controls.dampingFactor = 0.05;
 
+
     controls.update();
 
 
 
-    /* -------------------------------------
+    /* =====================================
        RETICLE
-    ------------------------------------- */
+    ===================================== */
 
     const geometry =
         new THREE.RingGeometry(
@@ -203,6 +309,7 @@ function init() {
         new THREE.MeshBasicMaterial({
 
             color: 0xffffff
+
         });
 
 
@@ -224,11 +331,11 @@ function init() {
 
 
 
-    /* -------------------------------------
+    /* =====================================
        CONFIGURATION AR
-    ------------------------------------- */
+    ===================================== */
 
-    const options = {
+    let options = {
 
         requiredFeatures: [
             'hit-test'
@@ -236,15 +343,18 @@ function init() {
 
         optionalFeatures: [
             'dom-overlay'
-        ],
+        ]
 
-        domOverlay: {
+    };
 
-            root:
-                document.getElementById(
-                    'content'
-                )
-        }
+
+    options.domOverlay = {
+
+        root:
+            document.getElementById(
+                'content'
+            )
+
     };
 
 
@@ -259,9 +369,9 @@ function init() {
 
 
 
-    /* -------------------------------------
+    /* =====================================
        DEBUT SESSION AR
-    ------------------------------------- */
+    ===================================== */
 
     renderer.xr.addEventListener(
 
@@ -280,24 +390,22 @@ function init() {
             controls.enabled = false;
 
 
-            /*
-             On cache l'objet de prévisualisation.
-             Il apparaîtra au moment du placement.
-            */
+            if(current_object){
 
-            if (current_object) {
+                current_object.visible =
+                    false;
 
-                current_object.visible = false;
             }
 
         }
+
     );
 
 
 
-    /* -------------------------------------
+    /* =====================================
        FIN SESSION AR
-    ------------------------------------- */
+    ===================================== */
 
     renderer.xr.addEventListener(
 
@@ -321,30 +429,29 @@ function init() {
             ).style.display = 'none';
 
 
-            /*
-             Si un objet était en attente,
-             on le réaffiche dans la vue normale.
-            */
+            if(current_object){
 
-            if (current_object) {
+                current_object.visible =
+                    true;
 
-                current_object.visible = true;
 
                 current_object.position.set(
                     0,
                     0,
                     0
                 );
+
             }
 
         }
+
     );
 
 
 
-    /* -------------------------------------
-       REDIMENSIONNEMENT
-    ------------------------------------- */
+    /* =====================================
+       RESIZE
+    ===================================== */
 
     window.addEventListener(
 
@@ -356,9 +463,9 @@ function init() {
 
 
 
-    /* -------------------------------------
+    /* =====================================
        MODELE PAR DEFAUT
-    ------------------------------------- */
+    ===================================== */
 
     loadModel(
         selected_model
@@ -366,9 +473,9 @@ function init() {
 
 
 
-    /* -------------------------------------
-       BOUCLE
-    ------------------------------------- */
+    /* =====================================
+       ANIMATION
+    ===================================== */
 
     renderer.setAnimationLoop(
         animate
@@ -379,10 +486,10 @@ function init() {
 
 
 /* =========================================
-   CHARGEMENT D'UN MODELE
+   CHARGEMENT MODELE
 ========================================= */
 
-function loadModel(model) {
+function loadModel(model){
 
 
     loading_model = model;
@@ -390,7 +497,7 @@ function loadModel(model) {
     selected_model = model;
 
 
-    const loader =
+    var loader =
         new GLTFLoader();
 
 
@@ -401,34 +508,28 @@ function loadModel(model) {
         '.glb',
 
 
-        function (gltf) {
+        function(gltf){
 
 
-            /*
-             Si l'utilisateur a sélectionné
-             un autre modèle entre temps,
-             on ignore celui-ci.
-            */
-
-            if (
+            if(
                 loading_model !== model
-            ) {
+            ){
 
                 return;
+
             }
 
 
 
-            /*
-             Supprime uniquement l'objet
-             qui n'a pas encore été placé.
-            */
+            /* Supprime uniquement
+               l'objet pas encore placé */
 
-            if (current_object) {
+            if(current_object){
 
                 scene.remove(
                     current_object
                 );
+
             }
 
 
@@ -438,18 +539,20 @@ function loadModel(model) {
 
 
 
-            /*
-             Centre le modèle sur son origine.
-            */
+            /* =================================
+               CENTRAGE OBJET
+            ================================= */
 
-            const box =
-                new THREE.Box3()
-                    .setFromObject(
-                        current_object
-                    );
+            var box =
+                new THREE.Box3();
 
 
-            const center =
+            box.setFromObject(
+                current_object
+            );
+
+
+            var center =
                 box.getCenter(
                     new THREE.Vector3()
                 );
@@ -461,9 +564,9 @@ function loadModel(model) {
 
 
 
-            /*
-             Position normale avant AR.
-            */
+            /* =================================
+               POSITION INITIALE
+            ================================= */
 
             current_object.position.set(
                 0,
@@ -479,19 +582,23 @@ function loadModel(model) {
 
 
 
-            /*
-             En AR, l'objet attend d'être placé.
-            */
+            /* En AR l'objet est caché
+               avant son placement */
 
-            if (
+            if(
                 renderer.xr.isPresenting
-            ) {
+            ){
 
-                current_object.visible = false;
+                current_object.visible =
+                    false;
 
-            } else {
+            }
 
-                current_object.visible = true;
+            else{
+
+                current_object.visible =
+                    true;
+
             }
 
 
@@ -501,7 +608,7 @@ function loadModel(model) {
         undefined,
 
 
-        function (error) {
+        function(error){
 
 
             console.error(
@@ -511,6 +618,7 @@ function loadModel(model) {
                 '.glb',
 
                 error
+
             );
 
         }
@@ -522,12 +630,12 @@ function loadModel(model) {
 
 
 /* =========================================
-   SELECTION D'UN MODELE DANS LE MENU
+   SELECTION OBJET MENU
 ========================================= */
 
 $('.ar-object').click(
 
-    function (event) {
+    function(event){
 
 
         event.preventDefault();
@@ -535,13 +643,14 @@ $('.ar-object').click(
         event.stopPropagation();
 
 
-        const model =
+        var model =
             $(this).attr(
                 'id'
             );
 
 
-        selected_model = model;
+        selected_model =
+            model;
 
 
         loadModel(
@@ -558,12 +667,36 @@ $('.ar-object').click(
 
 
 /* =========================================
+   ROTATION OBJET
+   CODE DU TD
+========================================= */
+
+function rotateObject(){
+
+
+    if(
+        current_object &&
+        reticle.visible
+    ){
+
+
+        current_object.rotation.y +=
+            deltaX / 100;
+
+
+    }
+
+}
+
+
+
+/* =========================================
    PLACE
 ========================================= */
 
 $('#place-button').click(
 
-    function (event) {
+    function(event){
 
 
         event.preventDefault();
@@ -579,29 +712,22 @@ $('#place-button').click(
 
 
 
-function placeObject() {
+function placeObject(){
 
 
-    /*
-     Il faut :
-     - un objet
-     - une surface détectée
-    */
-
-    if (
+    if(
         !current_object ||
         !reticle.visible
-    ) {
+    ){
 
         return;
+
     }
 
 
 
-    /*
-     Place l'objet exactement
-     sur le reticle.
-    */
+    /* Positionne l'objet
+       sur le cercle */
 
     current_object.position
         .setFromMatrixPosition(
@@ -609,14 +735,12 @@ function placeObject() {
         );
 
 
-    current_object.visible = true;
+    current_object.visible =
+        true;
 
 
 
-    /*
-     L'objet devient définitivement
-     un objet placé.
-    */
+    /* Ajoute l'objet à la liste */
 
     placed_objects.push(
         current_object
@@ -624,19 +748,15 @@ function placeObject() {
 
 
 
-    /*
-     Il n'est donc plus l'objet courant.
-    */
+    /* L'objet vient d'être placé */
 
     current_object = null;
 
 
 
-    /*
-     Charge une nouvelle copie du même
-     modèle afin de pouvoir en placer
-     un autre.
-    */
+    /* Recharge le même modèle
+       pour pouvoir en placer
+       un autre */
 
     loadModel(
         selected_model
@@ -648,12 +768,12 @@ function placeObject() {
 
 /* =========================================
    DELETE
-   Supprime le DERNIER objet placé
+   SUPPRIME LE DERNIER OBJET PLACE
 ========================================= */
 
 $('#delete-button').click(
 
-    function (event) {
+    function(event){
 
 
         event.preventDefault();
@@ -661,46 +781,30 @@ $('#delete-button').click(
         event.stopPropagation();
 
 
-        /*
-         Aucun objet placé.
-        */
 
-        if (
+        if(
             placed_objects.length === 0
-        ) {
+        ){
 
             console.log(
-                'Aucun objet à supprimer.'
+                'Aucun objet à supprimer'
             );
 
             return;
+
         }
 
 
 
-        /*
-         Récupère le dernier objet placé.
-        */
-
-        const objectToDelete =
+        var objectToDelete =
             placed_objects.pop();
 
 
-
-        /*
-         Le retire de la scène.
-        */
 
         scene.remove(
             objectToDelete
         );
 
-
-
-        /*
-         Libération des géométries
-         et matériaux.
-        */
 
         disposeObject(
             objectToDelete
@@ -714,12 +818,12 @@ $('#delete-button').click(
 
 /* =========================================
    CLEAR
-   Supprime TOUS les objets placés
+   SUPPRIME TOUS LES OBJETS
 ========================================= */
 
 $('#clear-button').click(
 
-    function (event) {
+    function(event){
 
 
         event.preventDefault();
@@ -730,7 +834,7 @@ $('#clear-button').click(
 
         placed_objects.forEach(
 
-            function (object) {
+            function(object){
 
 
                 scene.remove(
@@ -748,15 +852,11 @@ $('#clear-button').click(
 
 
 
-        /*
-         Vide complètement le tableau.
-        */
-
         placed_objects = [];
 
 
         console.log(
-            'Tous les objets ont été supprimés.'
+            'Tous les objets ont été supprimés'
         );
 
     }
@@ -769,34 +869,34 @@ $('#clear-button').click(
    LIBERATION MEMOIRE
 ========================================= */
 
-function disposeObject(object) {
+function disposeObject(object){
 
 
     object.traverse(
 
-        function (child) {
+        function(child){
 
 
-            if (child.geometry) {
+            if(child.geometry){
 
                 child.geometry.dispose();
+
             }
 
 
+            if(child.material){
 
-            if (child.material) {
 
-
-                if (
+                if(
                     Array.isArray(
                         child.material
                     )
-                ) {
+                ){
 
 
                     child.material.forEach(
 
-                        function (material) {
+                        function(material){
 
                             material.dispose();
 
@@ -805,7 +905,9 @@ function disposeObject(object) {
                     );
 
 
-                } else {
+                }
+
+                else{
 
 
                     child.material.dispose();
@@ -829,28 +931,25 @@ function disposeObject(object) {
 function animate(
     timestamp,
     frame
-) {
+){
 
 
-    /*
-     OrbitControls uniquement
-     hors AR.
-    */
 
-    if (
+    /* OrbitControls hors AR */
+
+    if(
         !renderer.xr.isPresenting
-    ) {
+    ){
 
         controls.update();
+
     }
 
 
 
-    /*
-     Pas encore en AR.
-    */
+    /* Pas en AR */
 
-    if (!frame) {
+    if(!frame){
 
 
         renderer.render(
@@ -860,29 +959,32 @@ function animate(
 
 
         return;
+
     }
 
 
 
-    const referenceSpace =
+    var referenceSpace =
         renderer.xr.getReferenceSpace();
 
 
-    const session =
+    var session =
         renderer.xr.getSession();
 
 
 
-    /* -------------------------------------
+    /* =====================================
        CREATION HIT TEST
-    ------------------------------------- */
+    ===================================== */
 
-    if (
+    if(
         !hitTestSourceRequested
-    ) {
+    ){
 
 
-        hitTestSourceRequested = true;
+        hitTestSourceRequested =
+            true;
+
 
 
         session
@@ -892,9 +994,9 @@ function animate(
 
             .then(
 
-                function (
+                function(
                     viewerSpace
-                ) {
+                ){
 
 
                     return session
@@ -902,6 +1004,7 @@ function animate(
 
                             space:
                                 viewerSpace
+
                         });
 
                 }
@@ -910,9 +1013,7 @@ function animate(
 
             .then(
 
-                function (
-                    source
-                ) {
+                function(source){
 
 
                     hitTestSource =
@@ -924,9 +1025,7 @@ function animate(
 
             .catch(
 
-                function (
-                    error
-                ) {
+                function(error){
 
 
                     console.error(
@@ -946,37 +1045,37 @@ function animate(
 
 
 
-    /* -------------------------------------
-       RESULTAT HIT TEST
-    ------------------------------------- */
+    /* =====================================
+       RESULTATS HIT TEST
+    ===================================== */
 
-    if (hitTestSource) {
+    if(hitTestSource){
 
 
-        const hitTestResults =
+        var hitTestResults =
             frame.getHitTestResults(
                 hitTestSource
             );
 
 
 
-        if (
+        if(
             hitTestResults.length > 0
-        ) {
+        ){
 
 
-            const hit =
+            var hit =
                 hitTestResults[0];
 
 
-            const pose =
+            var pose =
                 hit.getPose(
                     referenceSpace
                 );
 
 
 
-            if (pose) {
+            if(pose){
 
 
                 reticle.visible =
@@ -989,12 +1088,6 @@ function animate(
                     );
 
 
-
-                /*
-                 PLACE apparaît seulement
-                 quand une surface est trouvée.
-                */
-
                 document.getElementById(
                     'place-button'
                 ).style.display =
@@ -1003,7 +1096,9 @@ function animate(
             }
 
 
-        } else {
+        }
+
+        else{
 
 
             reticle.visible =
@@ -1031,10 +1126,11 @@ function animate(
 
 
 /* =========================================
-   RESIZE
+   REDIMENSIONNEMENT
+   CODE DU TD
 ========================================= */
 
-function onWindowResize() {
+function onWindowResize(){
 
 
     camera.aspect =
@@ -1045,17 +1141,9 @@ function onWindowResize() {
     camera.updateProjectionMatrix();
 
 
-
-    if (
-        !renderer.xr.isPresenting
-    ) {
-
-
-        renderer.setSize(
-            window.innerWidth,
-            window.innerHeight
-        );
-
-    }
+    renderer.setSize(
+        window.innerWidth,
+        window.innerHeight
+    );
 
 }
